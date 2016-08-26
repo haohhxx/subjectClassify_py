@@ -7,7 +7,6 @@ import sys
 import codecs
 import shutil
 import numpy as np
-from sklearn import feature_extraction
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.feature_extraction.text import CountVectorizer
 import sklearn.cross_validation as scv
@@ -19,15 +18,11 @@ from sklearn.cross_validation import KFold
 from sklearn.cross_validation import StratifiedKFold
 from sklearn.svm import LinearSVC
 from sklearn.linear_model import LogisticRegression
-from sklearn.decomposition import PCA
 from sklearn.decomposition import TruncatedSVD
 from sklearn import svm
 
-
-
 reload(sys)
 sys.setdefaultencoding('utf8')
-
 
 vectorizer = CountVectorizer()
 transformer = TfidfTransformer()
@@ -59,8 +54,8 @@ def loadTest(testPath):
 
 def func(trainpath,testpath,repath):
     clf = LogisticRegression()
-
-
+    repath = repath + os.path.basename(trainpath)
+    testpath = testpath + os.path.basename(trainpath)
     lablemap = {"识记与理解": '0', "分析与应用": '1', "综合与拓展": '2'}
 
     y = []#标签y
@@ -87,23 +82,23 @@ def func(trainpath,testpath,repath):
 
     clf.fit(X,y)
 
-    testX = loadTest(testpath + os.path.basename(trainpath))
+    testX = loadTest(testpath)
     predicted = clf.predict(testX)
-    fwrite = open(repath + os.path.basename(trainpath), 'w')
+    fwrite = open(repath , 'w')
     for pre in predicted:
         fwrite.write(pre+'\n')
     fwrite.close()
 
-
 if __name__ == "__main__":
-    trainfile = '/home/hao/桌面/学科分类新/分词/2gram/'
-    repath = '/home/hao/桌面/学科分类新/pre/test/'
-    testfile = '/home/hao/桌面/学科分类新/test/'
+    trainfile = u'D:/haozhenyuan/学科分类/train/NLPIR/'
+    repath = u'D:/haozhenyuan/学科分类/pre/'
+    testfile = u'D:/haozhenyuan/学科分类/test/'
     print trainfile
+
     for root,dirs,files in os.walk(trainfile):
         print files
         for file in files:
-            func(trainfile + file,testfile,repath)
+            func(trainfile+file,testfile,repath)
 
             #scores = func(allfile + file)
             #print file,
