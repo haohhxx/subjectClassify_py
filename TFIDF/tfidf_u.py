@@ -86,9 +86,11 @@ def func(trainpath,testpath,repath):
     print os.path.basename(trainpath)+'------------------------------------------------------------'
 
     clf.fit(X,y)
-
+    clf.predict_proba(X)
     testX = loadTest(testpath + os.path.basename(trainpath))
     predicted = clf.predict(testX)
+
+
     fwrite = open(repath + os.path.basename(trainpath), 'w')
     for pre in predicted:
         fwrite.write(pre+'\n')
@@ -96,13 +98,14 @@ def func(trainpath,testpath,repath):
 
 
 if __name__ == "__main__":
-    trainfile = '/home/hao/桌面/学科分类新/分词/2gram/'
+    trainfile = '/home/hao/桌面/学科分类新/分词/2gram'
     repath = '/home/hao/桌面/学科分类新/pre/test/'
     testfile = '/home/hao/桌面/学科分类新/test/'
     print trainfile
     for root,dirs,files in os.walk(trainfile):
         print files
         for file in files:
+            print file
             func(trainfile + file,testfile,repath)
 
             #scores = func(allfile + file)

@@ -60,6 +60,7 @@ def func(path):
     for line in open(path, 'r').readlines():
         words = line.strip().split(' ')
         lable = lablemap.get(words[0])
+
         line = line[line.find(' ') + 1:]
         corpus.append(line)
         lables.append(lable)
@@ -68,7 +69,7 @@ def func(path):
     #         lables.append('2')
     #         corpus.append(list2[ind])
     print os.path.basename(path)+'------------------------------------------------------------'
-    fwrite = open('/home/hao/桌面/学科分类新/pre/2gram/lr/' + os.path.basename(path), 'w')
+    fwrite = open('/home/hao/桌面/学科分类新/pre/train/NLPIR/lr_lda/' + os.path.basename(path), 'w')
     fwrite.write(os.path.basename(path)+'\n')
     # 5fold交叉检验
     #lables = np.array(lables)
@@ -82,25 +83,28 @@ def func(path):
         print 'fold'+str(i)+''
         fwrite.write('fold'+str(i)+'\n')
         clf = LogisticRegression()
-        clf = LDA()
-        newtrain=[]
-        newlable=[]
+        clf2 = LDA()
+        X=[]
+        y=[]
         for ti in train:
             if(lables[ti]=='2'):
                 for time in range(0,10,1):
-                    newtrain.append(tfidf[ti])
-                    newlable.append(lables[ti])
+                    X.append(tfidf[ti])
+                    y.append(lables[ti])
             else:
-                newtrain.append(tfidf[ti])
-                newlable.append(lables[ti])
+                X.append(tfidf[ti])
+                y.append(lables[ti])
 
-        clf.fit(newtrain,newlable)
+        clf.fit(X,y)
+        XX=clf.predict_proba(X)
+        clf2.fit(XX,y)
 
         t1 = test[0]
         t2 = test[-1]
         test = tfidf[t1:t2]
+        test = clf.predict_proba(test)
         testlables = lables[t1:t2]
-        predicted = clf.predict(test)
+        predicted = clf2.predict(test)
 
         fwrite.write(classification_report(testlables,predicted).replace('\n\n','\n'))
         print classification_report(testlables,predicted).replace('\n\n','\n')
@@ -125,8 +129,8 @@ def func(path):
     #return scores
 
 if __name__ == "__main__":
-    allfile = '/home/hao/桌面/学科分类新/分词/2gram/'
-    #allfile = '/home/hao/桌面/学科分类新/分词/NLPIR/'
+    #allfile = u'/home/hao/桌面/学科分类新/分词/2gram/'
+    allfile = u'/home/hao/桌面/学科分类新/train/NLPIR/'
     print allfile
     for root,dirs,files in os.walk(allfile):
         print files
