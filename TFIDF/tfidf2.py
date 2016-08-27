@@ -91,6 +91,10 @@ def func(path):
                 for time in range(0,10,1):
                     X.append(tfidf[ti])
                     y.append(lables[ti])
+            if (lables[ti] == '1'):
+                for time in range(0, 4, 1):
+                    X.append(tfidf[ti])
+                    y.append(lables[ti])
             else:
                 X.append(tfidf[ti])
                 y.append(lables[ti])
