@@ -21,13 +21,11 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.decomposition import PCA
 from sklearn.decomposition import TruncatedSVD
 from sklearn import svm
-from sklearn.ensemble import AdaBoostClassifier as AdaBoost
-
-
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.ensemble import AdaBoostClassifier
 
 reload(sys)
 sys.setdefaultencoding('utf8')
-
 
 def SVD_Vec(matData, dimension):
 	svd = TruncatedSVD(n_components=dimension)
@@ -71,19 +69,19 @@ def getData(tfidf,lables,indexArr):
 def func(subject):
     subject = os.path.basename(subject).replace(".txt",'')
 
+
     cf = ConfigParser.ConfigParser()
     cf.read("path_test.config")
 
     envir = 'WindowsServer2012'
     trainFilePath = cf.get(envir , 'trainFilePath') + subject+'.txt'
-    resultPath = cf.get(envir , 'resultPath') + subject+'.txt'
+    resultPath = cf.get(envir , 'resultPath') +'/ada100/'+ subject+'.txt'
+    print resultPath
     lablePath = cf.get(envir , 'lablePath') + subject
 
     vectorizer = CountVectorizer()
     transformer = TfidfTransformer()
-
     #lablemap, maplable = loadLableMap(lablePath)
-
 
     lables = []  # 标签y
     corpus = []  # 切词后用空格分开的文本
@@ -114,11 +112,12 @@ def func(subject):
         #clf = LogisticRegression()
         #clf2 = LDA()
         #clf4 = LinearSVC()
-        baseclf = LogisticRegression()
-        clf= AdaBoost(base_estimator=baseclf)
 
-        X , y  = getData(tfidf,lables,train);
-        Xt, yt = getData(tfidf, lables, test);
+        clf = AdaBoostClassifier(n_estimators=100)
+        #clf = KNeighborsClassifier()
+        #clf2 = LDA()
+        X , y  = getData(tfidf,lables,train)
+        Xt, yt = getData(tfidf, lables, test)
 
         clf.fit(X, y)
         #X = clf.predict_log_proba(X)
