@@ -4,8 +4,7 @@ import time
 import re
 import os
 import sys
-import codecs
-import shutil
+import ConfigParser
 import numpy as np
 from sklearn import feature_extraction
 from sklearn.feature_extraction.text import TfidfTransformer
@@ -71,14 +70,19 @@ def getData(tfidf,lables,indexArr):
 
 def func(subject):
     subject = os.path.basename(subject).replace(".txt",'')
-    trainFilePath = '/home/hao/IdeaProjects/学科分类/data/c2/splitWords/2gram/'+subject+'.txt'
-    resultPath = '/home/hao/PycharmProjects/subjectClassify/TFIDF/classifyC2/data/result/ada_2gram/'+subject+'.txt'
-    lablePath = '/home/hao/PycharmProjects/subjectClassify/TFIDF/map/abi/'+subject
+
+    cf = ConfigParser.ConfigParser()
+    cf.read("path_test.config")
+
+    envir = 'WindowsServer2012'
+    trainFilePath = cf.get(envir , 'trainFilePath') + subject+'.txt'
+    resultPath = cf.get(envir , 'resultPath') + subject+'.txt'
+    lablePath = cf.get(envir , 'lablePath') + subject
 
     vectorizer = CountVectorizer()
     transformer = TfidfTransformer()
 
-    lablemap, maplable = loadLableMap(lablePath)
+    #lablemap, maplable = loadLableMap(lablePath)
 
 
     lables = []  # 标签y
@@ -110,7 +114,8 @@ def func(subject):
         #clf = LogisticRegression()
         #clf2 = LDA()
         #clf4 = LinearSVC()
-        clf= AdaBoost()
+        baseclf = LogisticRegression()
+        clf= AdaBoost(base_estimator=baseclf)
 
         X , y  = getData(tfidf,lables,train);
         Xt, yt = getData(tfidf, lables, test);
@@ -130,12 +135,12 @@ def func(subject):
     fwrite.close()
 
 if __name__ == "__main__":
-    allfile = u'/home/hao/IdeaProjects/学科分类/data/c2/splitWords/nlpir/'
-    print allfile
-    for root,dirs,files in os.walk(allfile):
+    root = u'../../../subjectClassify_py/TFIDF/map/abi/'
+    print root
+    for root,dirs,files in os.walk(root):
         print files
         for file in files:
-            func(allfile + file)
+            func(root + file)
 
             #scores = func(allfile + file)
             #print file,
