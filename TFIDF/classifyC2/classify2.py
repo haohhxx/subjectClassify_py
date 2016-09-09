@@ -69,7 +69,6 @@ def getData(tfidf,lables,indexArr):
 def func(subject):
     subject = os.path.basename(subject).replace(".txt",'')
 
-
     cf = ConfigParser.ConfigParser()
     cf.read("path_test.config")
 
@@ -81,14 +80,15 @@ def func(subject):
 
     vectorizer = CountVectorizer()
     transformer = TfidfTransformer()
-    #lablemap, maplable = loadLableMap(lablePath)
+    lablemap, maplable = loadLableMap(lablePath)
 
     lables = []  # 标签y
+
     corpus = []  # 切词后用空格分开的文本
     for line in open(trainFilePath, 'r').readlines():
         words = line.strip().split(' ')
         lableword = words[0].strip()
-        #lable = maplable.get(lableword)
+        #lableword = maplable.get(lableword)
 
         line = line[line.find(' ') + 1:]
         corpus.append(line)
@@ -114,19 +114,12 @@ def func(subject):
         #clf4 = LinearSVC()
 
         #clf = AdaBoostClassifier(n_estimators=100)
-        clf = KNeighborsClassifier(n_neighbors=30)
-        #clf2 = LDA()
+        clf  = KNeighborsClassifier()
+        clf2 = KNeighborsClassifier()
         X , y  = getData(tfidf,lables,train)
         Xt, yt = getData(tfidf, lables, test)
 
         clf.fit(X, y)
-        #X = clf.predict_log_proba(X)
-        #clf2.fit(X, y)
-        #X = clf2.predict_log_proba(X)
-        #clf4.fit(X, y)
-
-        #Xt = clf.predict_log_proba(Xt)
-        #Xt = clf2.predict_log_proba(Xt)
         predicted = clf.predict(Xt)
         fwrite.write(classification_report(yt, predicted).replace('\n\n', '\n'))
         print classification_report(yt, predicted).replace('\n\n', '\n')
