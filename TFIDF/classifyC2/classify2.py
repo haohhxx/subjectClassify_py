@@ -9,20 +9,15 @@ import numpy as np
 from sklearn import feature_extraction
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.feature_extraction.text import CountVectorizer
-import sklearn.cross_validation as scv
 
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
-from  sklearn.metrics import accuracy_score
+
 from  sklearn.metrics import classification_report
-from sklearn.cross_validation import KFold
 from sklearn.cross_validation import StratifiedKFold
-from sklearn.svm import LinearSVC
-from sklearn.linear_model import LogisticRegression
-from sklearn.decomposition import PCA
 from sklearn.decomposition import TruncatedSVD
-from sklearn import svm
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.ensemble import AdaBoostClassifier
+
+import jieba
+import csv
 
 reload(sys)
 sys.setdefaultencoding('utf8')
@@ -57,6 +52,29 @@ def loadLableMap(lablePath):
        i = i + 1
     return lablemap,maplable
 
+def loadLableMap_biol(lablePath):
+    lablemap={}
+    maplable={}
+
+    for line in open(lablePath, 'r').readlines():
+        line = (line).strip()
+        if line == '理解能力':
+            lablemap[str(1)] = line
+            maplable[line] = str(1)
+        else:
+            lablemap[str(0)] = line
+            maplable[line] = str(0)
+
+    return lablemap,maplable
+
+def getData_tarin(tfidf,lables,indexArr):
+    X = []
+    y = []
+    for xti in indexArr:
+        y.append(lables[xti])
+        X.append(tfidf[xti])
+    return X,y
+
 def getData(tfidf,lables,indexArr):
 
     X = []
@@ -70,31 +88,55 @@ def func(subject):
     subject = os.path.basename(subject).replace(".txt",'')
 
     cf = ConfigParser.ConfigParser()
-    cf.read("path_test.config")
+    cf.read("path_new.config")
 
     envir = 'WindowsServer2012'
-    trainFilePath = cf.get(envir , 'trainFilePath') + subject+'.txt'
-    resultPath = cf.get(envir , 'resultPath') +'/kn30/'+ subject+'.txt'
+    #trainFilePath = cf.get(envir, 'trainFilePath') + subject+'.txt'
+    csvtrainFilePath = cf.get(envir, 'csvtrainFilePath') + subject+'.csv'
+
+    resultPath = cf.get(envir, 'resultPath') +'/kn_2time/'+ subject+'.txt'
     print resultPath
-    lablePath = cf.get(envir , 'lablePath') + subject
+    lablePath = cf.get(envir, 'lablePath') + subject
+
 
     vectorizer = CountVectorizer()
     transformer = TfidfTransformer()
-    lablemap, maplable = loadLableMap(lablePath)
+    lablemap, maplable = loadLableMap_biol(lablePath)
 
     lables = []  # 标签y
-
     corpus = []  # 切词后用空格分开的文本
-    for line in open(trainFilePath, 'r').readlines():
-        words = line.strip().split(' ')
-        lableword = words[0].strip()
-        #lableword = maplable.get(lableword)
 
-        line = line[line.find(' ') + 1:]
-        corpus.append(line)
-        lables.append(lableword)
+    csvfile = open(csvtrainFilePath ,'rb')
+    csvfile.readline()
+    trainReader = csv.reader(csvfile)
+    for line in trainReader:
+        lable = line[5]
 
-    print os.path.basename(trainFilePath) + '------------------------------------------------------------'
+        lall = line[2]+' '+line[3]+' '+line[4]+' '+line[7]
+
+        lall = jieba.cut(lall, cut_all=True)
+
+        la=[]
+        for a in lall:
+            la.append(a)
+            la.append(' ')
+           # print a
+        lables.append(lable)
+        ls = ''.join(la)
+        #print ls
+        corpus.append(ls)
+
+    # for line in open(trainFilePath, 'r').readlines():
+    #     words = line.strip().split(' ')
+    #     lableword = words[0].strip()
+    #     #print maplable
+    #     lableword = maplable.get(lableword)
+    #
+    #     line = line[line.find(' ') + 1:]
+    #     corpus.append(line)
+    #     lables.append(lableword)
+
+    print os.path.basename(csvtrainFilePath) + '------------------------------------------------------------'
     fwrite = open(resultPath, 'w')
     fwrite.write(subject + '\n')
     # 5fold交叉检验
@@ -105,33 +147,38 @@ def func(subject):
     tfidf = SVD_Vec(tfidf, 1000)
     i = 0
     for train, test in kf:
-        i = i + 1
+        i = i+ 1
         print 'fold' + str(i) + ''
         fwrite.write('fold' + str(i) + '\n')
 
         #clf = LogisticRegression()
-        #clf2 = LDA()
-        #clf4 = LinearSVC()
+        #clf2 = SVC(C = 100.0)
 
-        #clf = AdaBoostClassifier(n_estimators=100)
-        clf  = KNeighborsClassifier()
-        clf2 = KNeighborsClassifier()
-        X , y  = getData(tfidf,lables,train)
+        clf = KNeighborsClassifier(weights='distance',leaf_size=800)
+        #clf2 = KNeighborsClassifier()
+        X , y = getData(tfidf,lables,train)
         Xt, yt = getData(tfidf, lables, test)
 
         clf.fit(X, y)
+        #X=clf.predict_proba(X)
+        #clf2.fit(X, y)
+
+        #Xt = clf.predict_proba(Xt)
         predicted = clf.predict(Xt)
+
         fwrite.write(classification_report(yt, predicted).replace('\n\n', '\n'))
         print classification_report(yt, predicted).replace('\n\n', '\n')
 
     fwrite.close()
 
 if __name__ == "__main__":
-    root = u'../../../subjectClassify_py/TFIDF/map/abi/'
-    print root
-    for root,dirs,files in os.walk(root):
-        print files
-        for file in files:
+    # root = u'../../../subjectClassify_py/TFIDF/map/abi/'
+    # print root
+    # for root,dirs,files in os.walk(root):
+    #     print files
+    #     for file in files:
+            root = u'../../../subjectClassify_py/TFIDF/map/abi/'
+            file = 'biol'
             func(root + file)
 
             #scores = func(allfile + file)
