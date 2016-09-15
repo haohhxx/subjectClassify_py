@@ -19,6 +19,10 @@ from sklearn.neighbors import KNeighborsClassifier
 import jieba
 import csv
 
+from matplotlib import pyplot as plt
+from matplotlib import font_manager
+
+
 reload(sys)
 sys.setdefaultencoding('utf8')
 
@@ -98,6 +102,7 @@ def func(subject):
     print resultPath
     lablePath = cf.get(envir, 'lablePath') + subject
 
+
     vectorizer = CountVectorizer()
     transformer = TfidfTransformer()
     lablemap, maplable = loadLableMap_biol(lablePath)
@@ -110,7 +115,7 @@ def func(subject):
     trainReader = csv.reader(csvfile)
     for line in trainReader:
         lable = line[5]
-
+        lables.append(lable)
         lall = line[2]+' '+line[3]+' '+line[4]+' '+line[7]
         lall = jieba.cut(lall, cut_all=True)
 
@@ -119,25 +124,63 @@ def func(subject):
             la.append(a)
             la.append(' ')
 
-        lables.append(lable)
+        # if lable == '理解能力':
+        #     lables.append(1)
+        # else:
+        #     lables.append(0)
+
         ls = ''.join(la)
+        #print ls
         corpus.append(ls)
 
+    # kf = KFold(len(lables), n_folds=5)
+    tfidf = transformer.fit_transform(vectorizer.fit_transform(corpus))
+    tfidf = SVD_Vec(tfidf, 2)
+
     print os.path.basename(csvtrainFilePath) + '------------------------------------------------------------'
-    fwrite = open(resultPath, 'w')
-    fwrite.write(subject + '\n')
+
+    t1_x = []
+    t1_y = []
+    t2_x = []
+    t2_y = []
+    t3_x = []
+    t3_y = []
+    t4_x = []
+    t4_y = []
+
+    for index in range(len(lables)):
+        if lables[index] == '实验与探究能力':
+            t1_x.append(tfidf[index][0])
+            t1_y.append(tfidf[index][1])
+        if lables[index] == '获取信息的能力':
+            t2_x.append(tfidf[index][0])
+            t2_y.append(tfidf[index][1])
+        if lables[index] == '理解能力':
+            t3_x.append(tfidf[index][0])
+            t3_y.append(tfidf[index][1])
+        if lables[index] == '综合运用能力':
+            t4_x.append(tfidf[index][0])
+            t4_y.append(tfidf[index][1])
+
+    plt.figure(figsize=(8, 5), dpi=80)
+    axes = plt.subplot(111)
+
+    type1 = axes.scatter(t1_x, t1_y, s=10, c='red')
+    type2 = axes.scatter(t2_x, t2_y, s=1, c='green')
+    type3 = axes.scatter(t3_x, t3_y, s=5, c='yellow')
+    type4 = axes.scatter(t4_x, t4_y, s=20, c='blue')
+
+    axes.legend((type1,type2,type3,type4),('1','2','3','4'),loc=2)
+    plt.show()
+
+
     # 5fold交叉检验
     # lables = np.array(lables)
     kf = StratifiedKFold(lables, n_folds=5)
-    # kf = KFold(len(lables), n_folds=5)
-
-    tfidf = transformer.fit_transform(vectorizer.fit_transform(corpus))
-    tfidf = SVD_Vec(tfidf, 1000)
     i = 0
     for train, test in kf:
         i = i+ 1
         print 'fold' + str(i) + ''
-        fwrite.write('fold' + str(i) + '\n')
 
         #clf = LogisticRegression()
         #clf2 = SVC(C = 100.0)
@@ -147,70 +190,10 @@ def func(subject):
         X , y = getData(tfidf,lables,train)
         Xt, yt = getData(tfidf, lables, test)
 
-        y1 = []
-        for yy in y:
-            if yy == '理解能力':
-                y1.append('1')
-            else:
-                y1.append('0')
+        clf.fit(X, y)
+        #X=clf.predict_proba(X)
+        #clf2.fit(X, y)
 
-        clf.fit(X, y1)
-        train_predict = clf.predict(X)
-
-        ny = []
-        nX = []
-        for index in range(len(train_predict)):
-            if train_predict[index] == '0' :
-                ny.append(y[index])
-                nX.append(X[index])
-
-        clf2 = KNeighborsClassifier()
-        clf2.fit(nX, ny)
-
-        nny = []
-        nnX = []
-        for index in range(len(train_predict)):
-            if train_predict[index] == '1':
-                nny.append(y[index])
-                nnX.append(X[index])
-
-        clf3 = KNeighborsClassifier()
-        clf3.fit(nnX, nny)
-
-
-        # Xt = clf.predict_proba(Xt)
-        predicted1 = clf.predict(Xt)
-
-        y1t = []
-        for yy in yt:
-            if yy == '理解能力':
-                y1t.append('1')
-            else:
-                y1t.append('0')
-
-        fwrite.write(classification_report(y1t, predicted1).replace('\n\n', '\n'))
-        print classification_report(y1t, predicted1).replace('\n\n', '\n')
-
-        nyt = []
-        nXt = []
-        for index in range(len(predicted1)):
-            if predicted1[index] == '0':
-                nyt.append(yt[index])
-                nXt.append(Xt[index])
-        predicted2 = clf2.predict(nXt)
-        fwrite.write(classification_report(nyt, predicted2).replace('\n\n', '\n'))
-        print classification_report(nyt, predicted2).replace('\n\n', '\n')
-
-        nnyt = []
-        nnXt = []
-        for index in range(len(predicted1)):
-            if predicted1[index] == '1':
-                nnyt.append(yt[index])
-                nnXt.append(Xt[index])
-        predicted3 = clf3.predict(nnXt)
-        fwrite.write(classification_report(nnyt, predicted3).replace('\n\n', '\n'))
-        print classification_report(nnyt, predicted3).replace('\n\n', '\n')
-    fwrite.close()
 
 if __name__ == "__main__":
     # root = u'../../../subjectClassify_py/TFIDF/map/abi/'
@@ -221,21 +204,3 @@ if __name__ == "__main__":
             root = u'../../../subjectClassify_py/TFIDF/map/abi/'
             file = 'biol'
             func(root + file)
-
-            #scores = func(allfile + file)
-            #print file,
-            #print '\t',
-            #for sc in scores:
-            #    print sc,
-            #    print '\t',
-            #print ''
-# i=0
-#     j=0
-#     k=0
-#     for s in lables:
-#         if (s == '0'): i = i + 1
-#         if (s == '1'): j = j + 1
-#         if (s == '2'): k = k + 1
-#     print i
-#     print j
-#     print k

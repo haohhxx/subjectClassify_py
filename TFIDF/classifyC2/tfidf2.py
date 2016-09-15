@@ -114,7 +114,7 @@ def func(subject):
         #clf4 = LinearSVC()
 
         #clf = AdaBoostClassifier(n_estimators=100)
-        clf = KNeighborsClassifier(n_neighbors=30)
+        clf = KNeighborsClassifier()
         #clf2 = LDA()
         X , y  = getData(tfidf,lables,train)
         Xt, yt = getData(tfidf, lables, test)
@@ -134,12 +134,22 @@ def func(subject):
     fwrite.close()
 
 if __name__ == "__main__":
-    root = u'../../../subjectClassify_py/TFIDF/map/abi/'
-    print root
-    for root,dirs,files in os.walk(root):
-        print files
-        for file in files:
+    # root = u'../../../subjectClassify_py/TFIDF/map/abi/'
+    # print root
+    # for root,dirs,files in os.walk(root):
+    #     print files
+    #     for file in files:
+            root = u'../../../subjectClassify_py/TFIDF/map/abi/'
+            file = 'biol'
             func(root + file)
+
+# if __name__ == "__main__":
+#     root = u'../../../subjectClassify_py/TFIDF/map/abi/'
+#     print root
+#     for root,dirs,files in os.walk(root):
+#         print files
+#         for file in files:
+#             func(root + file)
 
             #scores = func(allfile + file)
             #print file,
