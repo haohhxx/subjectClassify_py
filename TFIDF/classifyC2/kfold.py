@@ -98,10 +98,6 @@ def func(subject):
     print resultPath
     lablePath = cf.get(envir, 'lablePath') + subject
 
-    vectorizer = CountVectorizer()
-    transformer = TfidfTransformer()
-    lablemap, maplable = loadLableMap_biol(lablePath)
-
     lables = []  # 标签y
     corpus = []  # 切词后用空格分开的文本
 
@@ -131,86 +127,26 @@ def func(subject):
     kf = StratifiedKFold(lables, n_folds=5)
     # kf = KFold(len(lables), n_folds=5)
 
-    tfidf = transformer.fit_transform(vectorizer.fit_transform(corpus))
-    tfidf = SVD_Vec(tfidf, 1000)
     i = 0
     for train, test in kf:
-        i = i+ 1
-        print 'fold' + str(i) + ''
-        fwrite.write('fold' + str(i) + '\n')
+        i = i + 1
+        fw = open(u"D:/haozhenyuan/学科分类/原始train7.19/kfold/biol/train/"+str(i)+'.txt', 'w')
+        for ind in train:
+            fw.write(lables[ind])
+            fw.write('\t')
+            fw.write(corpus[ind])
+            fw.write('\n')
+        fw.close()
 
-        #clf = LogisticRegression()
-        #clf2 = SVC(C = 100.0)
-
-        #clf = KNeighborsClassifier(weights='distance',leaf_size=800)
-        clf = KNeighborsClassifier()
-        X , y = getData(tfidf,lables,train)
-        Xt, yt = getData(tfidf, lables, test)
-
-        y1 = []
-        for yy in y:
-            if yy == '理解能力':
-                y1.append('1')
-            else:
-                y1.append('0')
-
-        clf.fit(X, y1)
-        train_predict = clf.predict(X)
-
-        ny = []
-        nX = []
-        for index in range(len(train_predict)):
-            if train_predict[index] == '0' :
-                ny.append(y[index])
-                nX.append(X[index])
-
-        clf2 = KNeighborsClassifier()
-        clf2.fit(nX, ny)
-
-        nny = []
-        nnX = []
-        for index in range(len(train_predict)):
-            if train_predict[index] == '1':
-                nny.append(y[index])
-                nnX.append(X[index])
-
-        clf3 = KNeighborsClassifier()
-        clf3.fit(nnX, nny)
+        fw = open(u"D:/haozhenyuan/学科分类/原始train7.19/kfold/biol/test/" + str(i) + '.txt', 'w')
+        for ind in test:
+            fw.write(lables[ind])
+            fw.write('\t')
+            fw.write(corpus[ind])
+            fw.write('\n')
+        fw.close()
 
 
-        # Xt = clf.predict_proba(Xt)
-        predicted1 = clf.predict(Xt)
-
-        y1t = []
-        for yy in yt:
-            if yy == '理解能力':
-                y1t.append('1')
-            else:
-                y1t.append('0')
-
-        fwrite.write(classification_report(y1t, predicted1).replace('\n\n', '\n'))
-        print classification_report(y1t, predicted1).replace('\n\n', '\n')
-
-        nyt = []
-        nXt = []
-        for index in range(len(predicted1)):
-            if predicted1[index] == '0':
-                nyt.append(yt[index])
-                nXt.append(Xt[index])
-        predicted2 = clf2.predict(nXt)
-        fwrite.write(classification_report(nyt, predicted2).replace('\n\n', '\n'))
-        print classification_report(nyt, predicted2).replace('\n\n', '\n')
-
-        nnyt = []
-        nnXt = []
-        for index in range(len(predicted1)):
-            if predicted1[index] == '1':
-                nnyt.append(yt[index])
-                nnXt.append(Xt[index])
-        predicted3 = clf3.predict(nnXt)
-        fwrite.write(classification_report(nnyt, predicted3).replace('\n\n', '\n'))
-        print classification_report(nnyt, predicted3).replace('\n\n', '\n')
-    fwrite.close()
 
 if __name__ == "__main__":
     # root = u'../../../subjectClassify_py/TFIDF/map/abi/'
@@ -222,20 +158,3 @@ if __name__ == "__main__":
             file = 'biol'
             func(root + file)
 
-            #scores = func(allfile + file)
-            #print file,
-            #print '\t',
-            #for sc in scores:
-            #    print sc,
-            #    print '\t',
-            #print ''
-# i=0
-#     j=0
-#     k=0
-#     for s in lables:
-#         if (s == '0'): i = i + 1
-#         if (s == '1'): j = j + 1
-#         if (s == '2'): k = k + 1
-#     print i
-#     print j
-#     print k
