@@ -11,7 +11,7 @@ from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.feature_extraction.text import CountVectorizer
 
 
-from  sklearn.metrics import classification_report
+from sklearn.metrics import classification_report
 from sklearn.cross_validation import StratifiedKFold
 from sklearn.decomposition import TruncatedSVD
 from sklearn.neighbors import KNeighborsClassifier

@@ -102,7 +102,6 @@ def func(subject):
     print resultPath
     lablePath = cf.get(envir, 'lablePath') + subject
 
-
     vectorizer = CountVectorizer()
     transformer = TfidfTransformer()
     lablemap, maplable = loadLableMap_biol(lablePath)
